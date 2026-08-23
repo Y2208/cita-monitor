@@ -1,0 +1,31 @@
+name: Monitor citas consulado
+
+on:
+  schedule:
+    # Corre cada 15 minutos. GitHub no garantiza el minuto exacto,
+    # puede retrasarse un poco en horas de mucha carga.
+    - cron: '*/15 * * * *'
+  workflow_dispatch: {}   # te permite lanzarlo manualmente desde GitHub también
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar repo
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: |
+          pip install playwright
+          playwright install --with-deps chromium
+
+      - name: Ejecutar monitor
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python monitor_citas.py
