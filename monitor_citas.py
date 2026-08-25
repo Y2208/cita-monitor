@@ -50,8 +50,8 @@ def main():
         page = context.new_page()
 
         try:
-            page.goto(URL, wait_until="networkidle", timeout=30000)
-            page.wait_for_timeout(3000)
+            page.goto(URL, wait_until="domcontentloaded", timeout=60000)
+            page.wait_for_timeout(8000)
             content = page.content().lower()
         except Exception as e:
             log(f"Error al cargar la pagina: {e}")
