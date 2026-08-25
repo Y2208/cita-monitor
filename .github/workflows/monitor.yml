@@ -2,7 +2,7 @@ name: Monitor citas consulado
 
 on:
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '*/2 5-13 * * 0,2'
   workflow_dispatch: {}
 
 jobs:
