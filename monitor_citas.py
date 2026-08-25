@@ -1,20 +1,4 @@
 #!/usr/bin/env python3
-"""
-Monitor de disponibilidad de citas - citaconsular.es (versión "una sola revisión")
-------------------------------------------------------------------------------
-Pensado para ejecutarse periódicamente vía GitHub Actions (o cualquier
-cron), no como proceso infinito. Cada ejecución:
-  1. Abre la página del widget de citas.
-  2. Detecta si hay señales de "sin citas", "posible disponibilidad" o
-     "captcha/bloqueo".
-  3. Si hay posible disponibilidad, envía una notificación a Telegram.
-  4. Termina (no hace bucle: el cron/scheduler decide cuándo volver a
-     correrlo).
-
-Este script NO intenta evadir captchas ni protecciones anti-bot: si las
-detecta, simplemente lo reporta y no insiste.
-"""
-
 import os
 import sys
 import urllib.request
@@ -42,13 +26,13 @@ def log(msg: str):
 
 def send_telegram(msg: str):
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        log("⚠ Telegram no configurado (faltan variables de entorno).")
+        log("Telegram no configurado (faltan variables de entorno).")
         return
     api_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     data = urllib.parse.urlencode({"chat_id": TELEGRAM_CHAT_ID, "text": msg}).encode()
     try:
         urllib.request.urlopen(api_url, data=data, timeout=10)
-        log("Notificación enviada a Telegram.")
+        log("Notificacion enviada a Telegram.")
     except Exception as e:
         log(f"Error enviando Telegram: {e}")
 
@@ -70,22 +54,22 @@ def main():
             page.wait_for_timeout(3000)
             content = page.content().lower()
         except Exception as e:
-            log(f"Error al cargar la página: {e}")
+            log(f"Error al cargar la pagina: {e}")
             browser.close()
             sys.exit(1)
 
         browser.close()
 
         if any(x in content for x in ["captcha", "acceso denegado", "are you a robot", "cloudflare"]):
-            log("El sitio pidió verificación/bloqueó el acceso. No se insiste.")
+            log("El sitio pidio verificacion/bloqueo el acceso. No se insiste.")
             return
 
         if any(phrase in content for phrase in NO_SLOTS_PHRASES):
             log("Sin citas disponibles por ahora.")
             return
 
-        log("¡Posible disponibilidad detectada!")
-        send_telegram(f"🔔 Posible cita disponible en citaconsular.es.\nEntra a revisar: {URL}")
+        log("Posible disponibilidad detectada!")
+        send_telegram(f"Posible cita disponible en citaconsular.es.\nEntra a revisar: {URL}")
 
 
 if __name__ == "__main__":
