@@ -16,7 +16,8 @@ jobs:
       - run: |
           pip install playwright
           playwright install --with-deps chromium
-      - env:
+      - name: Ejecutar monitor
+        env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python monitor_citas.py
