@@ -113,33 +113,44 @@ def main():
                 current.goto(base + "#services", wait_until="domcontentloaded", timeout=30000)
                 current.wait_for_timeout(6000)
 
-            log(f"URL final alcanzada: {current.url}")
-            # Junta el texto de la pagina principal Y de todos los iframes,
-            # porque el widget de citas (bookitit) carga dentro de un iframe.
-            all_text = current.content().lower()
+            
+          log(f"URL final alcanzada: {current.url}")
+
+            all_text = current.content()
             for fr in current.frames:
                 try:
-                    all_text += " " + fr.content().lower()
+                    all_text += " " + fr.content()
                 except Exception as e:
                     log(f"No se pudo leer un frame: {e}")
-            content = all_text
+
+            # Normaliza espacios raros (no separables, tabs, saltos) a espacio normal
+            content = " ".join(all_text.lower().split())
+
+            # Log de diagnostico: muestra un fragmento alrededor de "disponib"
+            idx = content.find("disponib")
+            if idx >= 0:
+                log(f"Contexto encontrado: ...{content[max(0,idx-60):idx+60]}...")
+            else:
+                log("La palabra 'disponib' no aparece en el contenido leido.")
 
         except Exception as e:
             log(f"Error durante la navegacion: {e}")
             browser.close()
             sys.exit(1)
 
-        browser.close()
-
         if any(x in content for x in ["captcha", "acceso denegado", "are you a robot"]):
             log("El sitio pidio verificacion/bloqueo el acceso. No se insiste.")
+            browser.close()
             return
 
         if any(phrase in content for phrase in NO_SLOTS_PHRASES):
             log("Sin citas disponibles por ahora.")
+            browser.close()
             return
 
         log("Posible disponibilidad detectada!")
+        current.screenshot(path="alerta.png", full_page=True)
+        browser.close()
         send_telegram(f"Posible cita disponible.\nRevisa desde: {FIRST_URL}")
 
 
