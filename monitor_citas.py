@@ -20,6 +20,7 @@ NO_SLOTS_PHRASES = [
     "no existen horas disponibles",
     "actualmente no hay",
     "no hay horas",
+    "no hay horas disponibles",
 ]
 
 
@@ -41,7 +42,6 @@ def send_telegram(msg: str):
 
 
 def click_if_present(pg, pattern, kind="button"):
-    """Intenta hacer clic en un botón/enlace/texto que matchee el patrón. No falla si no existe."""
     try:
         if kind == "button":
             loc = pg.get_by_role("button", name=re.compile(pattern, re.I))
@@ -71,6 +71,7 @@ def main():
         )
         page = context.new_page()
         current = page
+        content = ""
 
         try:
             log("Paso 1: abriendo pagina oficial del consulado...")
@@ -80,8 +81,7 @@ def main():
             log("Paso 2: buscando enlace 'Reservar cita de visados RFX'...")
             link = page.get_by_text(re.compile("Reservar cita de visados RFX", re.I))
             if link.count() == 0:
-                log("No se encontro el enlace esperado. Guardando estado y saliendo.")
-                log(f"Titulo de la pagina: {page.title()}")
+                log("No se encontro el enlace esperado.")
                 browser.close()
                 sys.exit(1)
 
@@ -113,8 +113,7 @@ def main():
                 current.goto(base + "#services", wait_until="domcontentloaded", timeout=30000)
                 current.wait_for_timeout(6000)
 
-            
-          log(f"URL final alcanzada: {current.url}")
+            log(f"URL final alcanzada: {current.url}")
 
             all_text = current.content()
             for fr in current.frames:
@@ -123,13 +122,11 @@ def main():
                 except Exception as e:
                     log(f"No se pudo leer un frame: {e}")
 
-            # Normaliza espacios raros (no separables, tabs, saltos) a espacio normal
             content = " ".join(all_text.lower().split())
 
-            # Log de diagnostico: muestra un fragmento alrededor de "disponib"
             idx = content.find("disponib")
             if idx >= 0:
-                log(f"Contexto encontrado: ...{content[max(0,idx-60):idx+60]}...")
+                log(f"Contexto encontrado: ...{content[max(0, idx-60):idx+60]}...")
             else:
                 log("La palabra 'disponib' no aparece en el contenido leido.")
 
