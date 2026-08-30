@@ -105,22 +105,20 @@ def main():
             if not clicked:
                 click_if_present(current, "continuar", kind="text")
 
-            current.wait_for_timeout(4000)
-
-            if "#services" not in current.url:
-                log("Forzando navegacion a #services...")
-                base = current.url.split("#")[0]
-                current.goto(base + "#services", wait_until="domcontentloaded", timeout=30000)
-                current.wait_for_timeout(6000)
+            log("Esperando a que cargue el widget de citas...")
+            current.wait_for_timeout(9000)
 
             log(f"URL final alcanzada: {current.url}")
+            log(f"Cantidad de frames encontrados: {len(current.frames)}")
 
             all_text = current.content()
             for fr in current.frames:
                 try:
-                    all_text += " " + fr.content()
+                    fr_content = fr.content()
+                    log(f"Frame URL: {fr.url} (longitud texto: {len(fr_content)})")
+                    all_text += " " + fr_content
                 except Exception as e:
-                    log(f"No se pudo leer un frame: {e}")
+                    log(f"No se pudo leer un frame ({fr.url}): {e}")
 
             content = " ".join(all_text.lower().split())
 
@@ -135,7 +133,11 @@ def main():
             browser.close()
             sys.exit(1)
 
-        if any(x in content for x in ["captcha", "acceso denegado", "are you a robot"]):
+        if any(x in content for x in [
+            "captcha", "acceso denegado", "are you a robot",
+            "verificación de seguridad", "verifique que es un ser humano",
+            "cloudflare", "ray id",
+        ]):
             log("El sitio pidio verificacion/bloqueo el acceso. No se insiste.")
             browser.close()
             return
