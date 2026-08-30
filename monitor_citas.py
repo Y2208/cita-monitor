@@ -113,8 +113,16 @@ def main():
                 current.goto(base + "#services", wait_until="domcontentloaded", timeout=30000)
                 current.wait_for_timeout(6000)
 
-            content = current.content().lower()
             log(f"URL final alcanzada: {current.url}")
+            # Junta el texto de la pagina principal Y de todos los iframes,
+            # porque el widget de citas (bookitit) carga dentro de un iframe.
+            all_text = current.content().lower()
+            for fr in current.frames:
+                try:
+                    all_text += " " + fr.content().lower()
+                except Exception as e:
+                    log(f"No se pudo leer un frame: {e}")
+            content = all_text
 
         except Exception as e:
             log(f"Error durante la navegacion: {e}")
