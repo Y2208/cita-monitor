@@ -107,6 +107,12 @@ def main():
 
             current.wait_for_timeout(4000)
 
+            if "#services" not in current.url:
+                log("Forzando navegacion a #services...")
+                base = current.url.split("#")[0]
+                current.goto(base + "#services", wait_until="domcontentloaded", timeout=30000)
+                current.wait_for_timeout(6000)
+
             content = current.content().lower()
             log(f"URL final alcanzada: {current.url}")
 
